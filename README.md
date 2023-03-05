@@ -70,3 +70,73 @@ sys.stdin.read()
 5. Make a Request in Instagram to Get Signature Printed:
 
 ![Signature](https://i.ibb.co/2kqDpcy/signature.png)
+-------------------------------------------
+
+
+
+CÔNG CỤ CẦN THIẾT:
+Điện thoại android đã root hoặc máy ảo cũng được (trong bài viết mình dùng Samsung Note 8)
+Máy tính đã cài:
+python vì các tool trong bài viết được xây dựng bằng python
+adb đương nhiên vì đang làm trên máy android mà 🤪
+Tải về file frida server cho điện thoại: https://github.com/frida/frida/releases (tải đúng phiên bản server như máy của mình sẽ tải bản server cho android-arm64)
+Charles hoặc Burp Suite tùy bạn quen dùng cái nào hơn (trong bài mình dùng Charles)
+SSL Pinning Bypass:
+    Đầu tiên chúng ta cần cài cắm nằm vùng vào điện thoại, cái mà sẽ theo lệnh của chúng ta và làm theo yêu cầu => đó chính là Frida Server. Các bạn giải nén file frida server đã tải về ra và đổi tên nó thành frida-server để tiện dùng cho mấy lệnh phía dưới đỡ phải đổi lại.
+Dùng lệnh adb sau để đẩy vào điện thoại:
+
+adb push frida-server /data/local/tmp
+
+Dùng tiếp lệnh sau để truy cập vào điện thoại:
+
+adb shell
+
+Sau khi truy cập thì dùng các lệnh dưới để chạy frida server (mình ko để frida server chạy background mà để nó chạy foreground vì không thích 👎 )
+
+
+cd /data/local/tmp
+chmod +x frida-server
+./frida-server
+
+Bạn có thể thích những bài đăng này
+FRIDA (SSL Pinning ByPass) Tích hợp tự động nhận tiền MOMO cho website
+FRIDA (SSL Pinning ByPass) Tích hợp tự động nhận tiền MOMO cho website
+Hướng dẫn cài V2Ray lên OpenWrt  để dùng 4G miễn phí port  80 (đơn  giản)
+Hướng dẫn cài V2Ray lên OpenWrt để dùng 4G miễn phí port 80 (đơn giản)
+Để nguyên terminal đang chạy frida server đó qua một bên, khi nào xong việc chỉ cần tắt đi là xong (tắt luôn frida server đang chạy foreground)
+Tiếp tục cài objection bằng PIP:
+
+pip3 install objection
+
+Sau khi cài xong thì chạy lệnh dưới để bắt đầu ssl pinning bypass với momo:
+
+
+objection -g com.mservice.momotransfer explore
+android sslpinning disable
+
+
+
+
+LẤY REQUEST:
+    Ở đây mình dùng app Charles. Sau khi cài xong file Cert và config proxy (cái này dễ quá mà viết ra chi tiết thì dài) thì các bạn bắt cho mình 2 URL quan trọng sau:
+https://owa.momo.vn/public/login
+https://m.mservice.io/hydra/v2/user/noti
+URL số 1 là khi các bạn nhập mã 6 số (hoặc quét vân tay) sẽ gọi và trả về một JSON. Trong JSON trả về đó các bạn chỉ cần lưu ý đến AUTH_TOKEN.
+AUTH_TOKEN này có giá trị là 1giờ 30 phút được dùng ở Header Authorization số 2
+
+URL số 2 để lấy các thông báo theo khoảng thời gian (quy định trong body). Kết quả trả về là một JSON trong đó chỉ cần quan tâm đến message->data->notifications là một Array. Trong Array này sẽ chứa mọi thông báo, trong đó có cả các thông báo về giao dịch 😍
+
+
+
+
+
+TÍCH HỢP VÀO WEBSITE:
+    Cái này thì tùy code của các bạn sử dụng ngôn ngữ nào mà vận dụng 2 request đó cho phù hợp. Tuy nhiên, thì mình sẽ có một số gợi ý thế này:
+Giữ nguyên Request số 1 lặp lại mỗi 1 giờ 20 phút 1 lần để lấy AUTH_TOKEN và lưu lại vào cache
+Lặp lại request số 2 mỗi 10 phút 1 lần với:
+AUTH_TOKEN lấy ở cache
+fromTime là timestamp micro second của NOW - (15*60*1000)
+toTime là timestamp micro second của NOW
+Mỗi giao dịch sẽ có tranId khác nhau, chỉ cần so sánh tranId để xem có giao dịch mới hay ko
+Vậy là xong rồi, anh em có thể scan thử hình bên dưới để tặng mình một ly cafe. Sau đó là một lời cảm ơn tự động vô cùng nồng ấm từ mình 🥳
+
